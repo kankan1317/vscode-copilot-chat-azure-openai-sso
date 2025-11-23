@@ -1,83 +1,188 @@
-# GitHub Copilot - Your AI peer programmer
+# Azure OpenAI Studio Chat Extension
 
-**[GitHub Copilot](https://code.visualstudio.com/docs/copilot/overview)** is an AI peer programming tool that helps you write code faster and smarter.
+[English](README.md) | [日本語](README.ja.md)
 
-GitHub Copilot adapts to your unique needs allowing you to select the best model for your project, customize chat responses with custom instructions, and utilize agent mode for AI-powered, seamlessly integrated peer programming sessions.
 
-**Sign up for [GitHub Copilot Free](https://github.com/settings/copilot?utm_source=vscode-chat-readme&utm_medium=first&utm_campaign=2025mar-em-MSFT-signup)!**
+> **Note**: This project is a modified version of the [GitHub Copilot Chat extension](https://github.com/microsoft/vscode-copilot-chat) by Microsoft. It has been adapted to work with Azure OpenAI Studio instead of GitHub Copilot, using Azure Entra ID authentication.
 
-![Working with GitHub Copilot agent mode to make edits to code in your workspace](https://github.com/microsoft/vscode-copilot-release/blob/main/images/hero-dark.png?raw=true)
+A VS Code extension that provides AI-powered chat and coding assistance using Azure OpenAI Studio with Azure Entra ID authentication.
 
-When you install Copilot in Visual Studio Code, you get two extensions:
-* **[GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot)** - Provides inline coding suggestions as you type.
-* **[GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat)** (this extension) - A companion extension that provides conversational AI assistance.
+## Attribution
 
-## Getting access to GitHub Copilot
+This extension is based on the [GitHub Copilot Chat extension](https://github.com/microsoft/vscode-copilot-chat) (Copyright (c) Microsoft Corporation). The original extension has been modified to:
+- Replace GitHub authentication with Azure Entra ID authentication
+- Connect to Azure OpenAI Studio endpoints instead of GitHub Copilot API
+- Remove GitHub-specific features and branding
+- Adapt the user interface for Azure OpenAI Studio
 
-Sign up for [GitHub Copilot Free](https://github.com/settings/copilot?utm_source=vscode-chat-readme&utm_medium=second&utm_campaign=2025mar-em-MSFT-signup), or request access from your enterprise admin.
+All modifications are released under the same MIT License as the original project.
 
-To access GitHub Copilot, an active GitHub Copilot subscription is required. You can read more about our business and individual offerings at [github.com/features/copilot](https://github.com/features/copilot?utm_source=vscode-chat&utm_medium=readme&utm_campaign=2025mar-em-MSFT-signup).
+## Features
 
-## AI-powered coding sessions
+- **Azure Entra ID Authentication**: Secure authentication using Microsoft Azure Entra ID (formerly Azure Active Directory)
+- **Azure OpenAI Integration**: Direct integration with Azure OpenAI Studio endpoints
+- **AI Chat Interface**: Conversational AI assistance for coding tasks
+- **Code Generation**: AI-powered code suggestions and completions
+- **Multi-language Support**: Works with Java, PHP, Python, JavaScript, Ruby, Go, C#, C++, and more
 
-**Start an AI-powered coding session tailored to your workflow**. Copilot Edits allows you to quickly iterate on code changes directly in the editor, across multiple files using natural language. For a more autonomous peer programmer experience,
-[agent mode](https://aka.ms/vscode-copilot-agent) performs multi-step coding tasks at your command. It automatically handles compile and lint errors, monitors terminal and test output, and iterates until the task is complete. [Edit mode](https://aka.ms/vscode-copilot-edit) offers a conversational, step-by-step coding experience. Engage in multi-turn chat conversations while Copilot applies edits directly to your codebase, allowing you to review changes in context and maintain full control.
+## Prerequisites
 
-![Agent mode in Copilot Chat creating a new Vue application](https://github.com/microsoft/vscode-copilot-release/blob/main/images/agent-mode-readme.gif?raw=true)
+- Visual Studio Code 1.107.0 or later
+- Node.js 22.14.0 or later
+- Azure OpenAI Studio account with appropriate permissions
+- Azure Entra ID credentials
 
-## Inline suggestions in the editor
+## Installation
 
-**Automatically receive inline suggestions in the editor** from [ghost text suggestions](https://aka.ms/vscode-completions) and [next edit suggestions](https://aka.ms/vscode-nes) to help you write code faster. Ghost text suggestions provide suggestions at the current location, tailored to your coding style and your existing code. Copilot next edit suggestions (Copilot NES) takes it a step further and predicts what and where your next logical code change will be. Use the Tab key to navigate and accept changes in quick succession.
+### From Source
 
-![Copilot next edit suggestions](https://code.visualstudio.com/assets/docs/copilot/inline-suggestions/nes-point.gif)
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/azure-openai-chat.git
+   cd azure-openai-chat
+   ```
 
-## Ask and learn about your code with chat
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-**Ask Copilot for help with any task or question** in the [Chat view](https://aka.ms/vscode-chat), bringing in code from your current files. Rather than giving you a generic answer, it can give answers that are relevant for your codebase using information provided by [participants](https://aka.ms/vscode-chat-participants), [variables](https://aka.ms/vscode-chat-variables), and [slash commands](https://aka.ms/vscode-chat-commands).
+3. Build the extension:
+   ```bash
+   npm run build
+   ```
 
-![Using the workspace chat participant](https://github.com/microsoft/vscode-copilot-release/blob/main/images/participants-workspace.gif?raw=true)
+4. Package the extension:
+   ```bash
+   npm run package
+   ```
 
-**Apply Copilot's AI suggestions directly to your code** using [Inline chat](https://aka.ms/vscode-inline-chat), staying in the flow. Need help with refactoring a method, adding error handling, or explaining a complex algorithm - just launch Copilot in the editor!
+5. Install the `.vsix` file in VS Code:
+   - Open VS Code
+   - Go to Extensions view (Ctrl+Shift+X)
+   - Click the "..." menu and select "Install from VSIX..."
+   - Select the generated `.vsix` file
 
-![Inline chat in VS Code](https://code.visualstudio.com/assets/docs/copilot/copilot-chat/inline-chat-question-example.png)
+## Configuration
 
-### Supported languages and frameworks
+The extension uses Azure Entra ID for authentication by default. No additional configuration is required for basic usage.
 
-GitHub Copilot works on any language, including Java, PHP, Python, JavaScript, Ruby, Go, C#, or C++. Because it’s been trained on languages in public repositories, it works for most popular languages, libraries and frameworks.
+### Advanced Configuration
 
-### Version compatibility
+You can configure Azure OpenAI models in VS Code settings:
 
-As Copilot Chat releases in lockstep with VS Code due to its deep UI integration, every new version of Copilot Chat is only compatible with the latest and newest release of VS Code. This means that if you are using an older version of VS Code, you will not be able to use the latest Copilot Chat.
+```json
+{
+  "github.copilot.chat.azureModels": {
+    "your-model-id": {
+      "name": "Your Model Name",
+      "url": "https://your-endpoint.openai.azure.com",
+      "toolCalling": true,
+      "vision": false,
+      "maxInputTokens": 128000,
+      "maxOutputTokens": 4096
+    }
+  }
+}
+```
 
-Only the latest Copilot Chat versions will use the latest models provided by the Copilot service, as even minor model upgrades require prompt changes and fixes in the extension.
+## Development
 
-### Privacy and preview terms
+### Using Docker
 
-By using Copilot Chat you agree to [GitHub Copilot chat preview terms](https://docs.github.com/en/early-access/copilot/github-copilot-chat-technical-preview-license-terms). Review the [transparency note](https://aka.ms/CopilotChatTransparencyNote) to understand about usage, limitations and ways to improve Copilot Chat during the technical preview.
+The project includes Docker configuration for consistent development environment:
 
-Your code is yours. We follow responsible practices in accordance with our [Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement) to ensure that your code snippets will not be used as suggested code for other users of GitHub Copilot.
+```bash
+# Build and start the container
+docker compose build
+docker compose up -d
 
-To get the latest security fixes, please use the latest version of the Copilot extension and VS Code.
+# Enter the container
+docker compose exec dev bash
 
-### Resources & next steps
-* **Sign up for [GitHub Copilot Free](https://github.com/settings/copilot?utm_source=vscode-chat-readme&utm_medium=third&utm_campaign=2025mar-em-MSFT-signup)**
-    * If you're using Copilot for your business, check out [Copilot Business](https://docs.github.com/en/copilot/copilot-business/about-github-copilot-business) and [Copilot Enterprise](https://docs.github.com/en/copilot/github-copilot-enterprise/overview/about-github-copilot-enterprise)
-* **[Get started with Copilot in VS Code tutorial](https://code.visualstudio.com/docs/copilot/getting-started)**
-* **[Copilot Chat quickstart video](https://www.youtube.com/watch?v=3surPGP7_4o)** to learn Copilot Chat in less than 4 minutes
-* **[VS Code Copilot Series on YouTube](https://www.youtube.com/playlist?list=PLj6YeMhvp2S5_hvBl2SE-7YCHYlLQ0bPt)**
-* **[FAQ](https://code.visualstudio.com/docs/copilot/faq)**
-* **[Feedback](https://github.com/microsoft/vscode-copilot-release/issues)**: We'd love to get your help in making GitHub Copilot better!
+# Run tests
+docker compose exec dev npm run test:unit
 
-## Data and telemetry
+# Run TypeScript check
+docker compose exec dev npm run typecheck
+```
 
-The GitHub Copilot Extension for Visual Studio Code collects usage data and sends it to Microsoft to help improve our products and services. Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more. This extension respects the `telemetry.telemetryLevel` setting which you can learn more about at https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+### Local Development
 
-## Trademarks
+```bash
+# Install dependencies
+npm install
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow Microsoft's Trademark & Brand Guidelines. Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
+# Run tests
+npm run test:unit
+
+# Type check
+npm run typecheck
+
+# Build
+npm run build
+
+# Watch mode
+npm run watch
+```
+
+## Testing
+
+```bash
+# Run unit tests
+npm run test:unit
+
+# Run all tests
+npm test
+
+# Type checking
+npm run typecheck
+```
+
+## Key Differences from GitHub Copilot
+
+This extension differs from the original GitHub Copilot Chat extension in the following ways:
+
+1. **Authentication**: Uses Azure Entra ID instead of GitHub authentication
+2. **API Endpoints**: Connects to Azure OpenAI Studio endpoints instead of GitHub Copilot API
+3. **Branding**: Updated to reflect Azure OpenAI Studio
+4. **Inline Completions**: Disabled to prevent GitHub-specific features
+
+## Architecture
+
+- **Authentication**: `src/platform/authentication/` - Azure Entra ID integration
+- **Azure Provider**: `src/extension/byok/vscode-node/azureProvider.ts` - Azure OpenAI model provider
+- **Endpoint**: `src/extension/byok/node/azureOpenAIEndpoint.ts` - Azure-specific endpoint handling
+- **Configuration**: `src/platform/configuration/` - Extension settings and configuration
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
 Copyright (c) Microsoft Corporation. All rights reserved.
 
 Licensed under the [MIT](LICENSE.txt) license.
+
+## Acknowledgments
+
+This project is based on the [GitHub Copilot Chat extension](https://github.com/microsoft/vscode-copilot-chat) by Microsoft. We are grateful for their work on the original extension.
+
+## Privacy and Data
+
+This extension uses Azure OpenAI Studio services. Please review:
+- [Microsoft Privacy Statement](https://privacy.microsoft.com/privacystatement)
+- [Azure OpenAI Service Data Privacy](https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy)
+
+The extension respects the `telemetry.telemetryLevel` setting in VS Code. Learn more at https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow Microsoft's Trademark & Brand Guidelines. Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
