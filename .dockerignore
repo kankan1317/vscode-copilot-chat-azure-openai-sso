@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.vscode
+*.log
+.env
+.DS_Store
+coverage
+.nyc_output
+.devcontainer
+Dockerfile
+docker-compose.yml
+.dockerignore
