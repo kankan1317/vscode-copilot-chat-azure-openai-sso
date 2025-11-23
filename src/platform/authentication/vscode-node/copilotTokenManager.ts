@@ -61,20 +61,37 @@ export class VSCodeCopilotTokenManager extends BaseCopilotTokenManager {
 		const allowNoAuthAccess = this.configurationService.getNonExtensionConfig<boolean>('chat.allowAnonymousAccess');
 		const session = await getAnyAuthSession(this.configurationService, { silent: true });
 		if (!session && !allowNoAuthAccess) {
-			this._logService.warn('GitHub login failed');
-			this._telemetryService.sendGHTelemetryErrorEvent('auth.github_login_failed');
+			this._logService.warn('Azure login failed');
+			// this._telemetryService.sendGHTelemetryErrorEvent('auth.github_login_failed');
 			return { kind: 'failure', reason: 'GitHubLoginFailed' };
 		}
 		if (session) {
 			// Log the steps by default, but only log actual token values when the log level is set to debug.
 			this._logService.info(`Logged in as ${session.account.label}`);
-			const tokenResult = await this.authFromGitHubToken(session.accessToken, session.account.label);
-			if (tokenResult.kind === 'success') {
-				this._logService.info(`Got Copilot token for ${session.account.label}`);
-				this._logService.info(`Copilot Chat: ${this._envService.getVersion()}, VS Code: ${this._envService.vscodeVersion}`);
-			}
-			return tokenResult;
+
+			// For Azure SSO, we use the Entra ID token directly.
+			// We wrap it in a structure that looks like a Copilot token to satisfy the interface.
+			const token = session.accessToken;
+			const expires_at = nowSeconds() + 3600; // Assume 1 hour validity or extract from JWT if needed
+
+			const tokenInfo: ExtendedTokenInfo = {
+				token: token,
+				expires_at: expires_at,
+				refresh_in: 1800,
+				sku: 'azure-sso',
+				chat_enabled: true,
+				code_quote_enabled: true,
+				codex_agent_enabled: true,
+				isVscodeTeamMember: false,
+				username: session.account.label,
+				copilot_plan: 'azure-sso'
+			};
+
+			this._logService.info(`Got Azure token for ${session.account.label}`);
+			return { kind: 'success', ...tokenInfo };
 		} else {
+			// Fallback for dev device ID (maybe keep it or disable it?)
+			// For now, let's keep it but it might fail if it tries to hit GitHub
 			this._logService.info(`Allowing anonymous access with devDeviceId`);
 			const tokenResult = await this.authFromDevDeviceId(env.devDeviceId);
 			if (tokenResult.kind === 'success') {
