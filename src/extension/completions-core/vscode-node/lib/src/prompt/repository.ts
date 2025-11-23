@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AdoRepoId, getAdoRepoIdFromFetchUrl, getGithubRepoIdFromFetchUrl, GithubRepoId, parseRemoteUrl } from '../../../../../../platform/git/common/gitService';
+import { AdoRepoId, getAdoRepoIdFromFetchUrl, parseRemoteUrl } from '../../../../../../platform/git/common/gitService';
 import { ServicesAccessor } from '../../../../../../util/vs/platform/instantiation/common/instantiation';
 import { FileIdentifier, ICompletionsFileSystemService } from '../fileSystem';
 import { LRUCacheMap } from '../helpers/cache';
@@ -29,23 +29,10 @@ interface RepoInfo {
 	/**
 	 * Data for github.com and ADO repositories.
 	 */
-	repoId: GithubRepoId | AdoRepoId | undefined;
+	repoId: AdoRepoId | undefined;
 }
 
 export type MaybeRepoInfo = RepoInfo | undefined | ComputationStatus;
-
-export function tryGetGitHubNWO(repoInfo: MaybeRepoInfo): string | undefined {
-	if (repoInfo === undefined) {
-		return undefined;
-	}
-	if (repoInfo === ComputationStatus.PENDING) {
-		return undefined;
-	}
-	if (repoInfo.repoId?.type === 'github') {
-		return (repoInfo.repoId.org + '/' + repoInfo.repoId.repo).toLowerCase();
-	}
-	return undefined;
-}
 
 /**
  * Sends off a computation to extract information about which git repo the file belongs to in the background.
@@ -106,12 +93,12 @@ export async function extractRepoInfo(accessor: ServicesAccessor, uri: FileIdent
 
 function parseRepoUrl(
 	url: string
-): { host: string; path: string; repoId: GithubRepoId | AdoRepoId | undefined } | undefined {
+): { host: string; path: string; repoId: AdoRepoId | undefined } | undefined {
 	const res = parseRemoteUrl(url);
 	if (!res) {
 		return undefined;
 	}
-	const repoId = getGithubRepoIdFromFetchUrl(url) ?? getAdoRepoIdFromFetchUrl(url);
+	const repoId = getAdoRepoIdFromFetchUrl(url);
 	return { ...res, repoId };
 }
 

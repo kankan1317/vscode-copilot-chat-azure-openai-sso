@@ -3,16 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
-import type { CancellationToken } from 'vscode';
-import { IAuthenticationService } from '../../../../platform/authentication/common/authentication';
+
 import { ConfigKey, IConfigurationService } from '../../../../platform/configuration/common/configurationService';
 import { ILogService } from '../../../../platform/log/common/logService';
 import { IWorkspaceService } from '../../../../platform/workspace/common/workspaceService';
 import { createServiceIdentifier } from '../../../../util/common/services';
 import { joinPath } from '../../../../util/vs/base/common/resources';
 import { URI } from '../../../../util/vs/base/common/uri';
-import { GitHubMcpDefinitionProvider } from '../../../githubMcp/common/githubMcpDefinitionProvider';
 
 declare const TextDecoder: {
 	decode(input: Uint8Array): string;
@@ -86,7 +83,7 @@ export class CopilotCLIMCPHandler implements ICopilotCLIMCPHandler {
 	constructor(
 		@ILogService private readonly logService: ILogService,
 		@IWorkspaceService private readonly workspaceService: IWorkspaceService,
-		@IAuthenticationService private readonly authenticationService: IAuthenticationService,
+
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) { }
 
@@ -141,13 +138,11 @@ export class CopilotCLIMCPHandler implements ICopilotCLIMCPHandler {
 	}
 
 	private async parseAndProcessConfig(configText: string, workspacePath: string, processedConfig: Record<string, MCPServerConfig>): Promise<void> {
-		const parseErrors: ParseError[] = [];
-		const mcpConfig = parse(configText, parseErrors, { allowTrailingComma: true, disallowComments: false }) as unknown;
-
-		if (parseErrors.length > 0) {
-			const { error: parseErrorCode } = parseErrors[0];
-			const message = printParseErrorCode(parseErrorCode);
-			this.logService.warn(`[CopilotCLIMCPHandler] Failed to parse MCP config ${message}.`);
+		let mcpConfig: unknown;
+		try {
+			mcpConfig = JSON.parse(configText);
+		} catch (e) {
+			this.logService.warn(`[CopilotCLIMCPHandler] Failed to parse MCP config: ${e}`);
 			return;
 		}
 
@@ -245,40 +240,7 @@ export class CopilotCLIMCPHandler implements ICopilotCLIMCPHandler {
 	}
 
 	private async addBuiltInGitHubServer(config: Record<string, MCPServerConfig>): Promise<void> {
-		try {
-			// Don't override if user has configured their own github mcp server
-			if (config['github']) {
-				return;
-			}
-
-			const definitionProvider = new GitHubMcpDefinitionProvider(
-				this.configurationService,
-				this.authenticationService,
-				this.logService
-			);
-
-			const definitions = definitionProvider.provideMcpServerDefinitions();
-			if (!definitions || definitions.length === 0) {
-				this.logService.trace('[CopilotCLIMCPHandler] No GitHub MCP server definitions available.');
-				return;
-			}
-
-			// Use the first definition
-			const definition = definitions[0];
-
-			// Resolve the definition to get the access token
-			const resolvedDefinition = await definitionProvider.resolveMcpServerDefinition(definition, {} as CancellationToken);
-
-			config['github'] = {
-				type: 'http',
-				url: resolvedDefinition.uri.toString(),
-				tools: ['*'],
-				isDefaultServer: true,
-				headers: resolvedDefinition.headers,
-			};
-			this.logService.trace('[CopilotCLIMCPHandler] Added built-in GitHub MCP server via definition provider.');
-		} catch (error) {
-			this.logService.warn(`[CopilotCLIMCPHandler] Failed to add built-in GitHub MCP server: ${error}`);
-		}
+		// Disabled built-in GitHub MCP server
+		return;
 	}
 }

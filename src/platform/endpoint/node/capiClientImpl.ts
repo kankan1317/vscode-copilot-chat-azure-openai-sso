@@ -20,4 +20,12 @@ export class CAPIClientImpl extends BaseCAPIClientService {
 			envService
 		);
 	}
+
+	get proxyBaseURL(): string {
+		return 'https://localhost/dummy/proxy';
+	}
+
+	get originTrackerURL(): string {
+		return 'https://localhost/dummy/origin-tracker';
+	}
 }

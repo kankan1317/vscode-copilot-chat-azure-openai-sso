@@ -6,10 +6,9 @@
 import { authentication, AuthenticationGetSessionOptions, AuthenticationSession, AuthenticationSessionsChangeEvent } from 'vscode';
 import { mixin } from '../../../util/vs/base/common/objects';
 import { URI } from '../../../util/vs/base/common/uri';
-import { AuthPermissionMode, ConfigKey, IConfigurationService } from '../../configuration/common/configurationService';
-import { authProviderId, GITHUB_SCOPE_ALIGNED, GITHUB_SCOPE_READ_USER, GITHUB_SCOPE_USER_EMAIL, MinimalModeError } from '../common/authentication';
+import { AzureAuthMode, IConfigurationService } from '../../configuration/common/configurationService';
 
-export const SESSION_LOGIN_MESSAGE = 'You are not signed in to GitHub. Please sign in to use Copilot.';
+export const SESSION_LOGIN_MESSAGE = 'You are not signed in to Azure. Please sign in to use Copilot.';
 // These types are subsets of the "real" types AuthenticationSessionAccountInformation and
 // AuthenticationSession. They allow us to use the type system to validate which fields
 // are actually needed and hence which ones need values when we construct fake session.
@@ -61,29 +60,14 @@ async function getAuthSession(providerId: string, defaultScopes: string[], getSi
  * @deprecated use `IAuthenticationService` instead
  */
 export function getAnyAuthSession(configurationService: IConfigurationService, options?: AuthenticationGetSessionOptions): Promise<AuthenticationSession | undefined> {
-	const providerId = authProviderId(configurationService);
+	const providerId = AzureAuthMode.MICROSOFT_AUTH_PROVIDER;
+	const scopes = [AzureAuthMode.COGNITIVE_SERVICES_SCOPE];
 
 	return getAuthSession(
 		providerId,
-		GITHUB_SCOPE_USER_EMAIL,
+		scopes,
 		async () => {
-			// Ask for aligned scopes first, since that's what we want to use going forward.
-			if (configurationService.getConfig(ConfigKey.Shared.AuthPermissions) !== AuthPermissionMode.Minimal) {
-				const permissive = await authentication.getSession(providerId, GITHUB_SCOPE_ALIGNED, { silent: true });
-				if (permissive) {
-					return permissive;
-				}
-			}
-			const minimal = await authentication.getSession(providerId, GITHUB_SCOPE_USER_EMAIL, { silent: true });
-			if (minimal) {
-				return minimal;
-			}
-			// This is what Completions extension use to ask for and is here mostly for backwards compatibility.
-			const fallback = await authentication.getSession(providerId, GITHUB_SCOPE_READ_USER, { silent: true });
-			if (fallback) {
-				return fallback;
-			}
-			return undefined;
+			return await authentication.getSession(providerId, scopes, { silent: true });
 		},
 		options
 	);
@@ -97,23 +81,11 @@ export function getAnyAuthSession(configurationService: IConfigurationService, o
  * @deprecated use `IAuthenticationService` instead
  */
 export function getAlignedSession(configurationService: IConfigurationService, options: AuthenticationGetSessionOptions): Promise<AuthenticationSession | undefined> {
-	if (configurationService.getConfig(ConfigKey.Shared.AuthPermissions) === AuthPermissionMode.Minimal) {
-		if (options.createIfNone || options.forceNewSession) {
-			throw new MinimalModeError();
-		}
-		return Promise.resolve(undefined);
-	}
-	const providerId = authProviderId(configurationService);
-	return getAuthSession(
-		providerId,
-		GITHUB_SCOPE_ALIGNED,
-		async () => await authentication.getSession(providerId, GITHUB_SCOPE_ALIGNED, { silent: true }),
-		options
-	);
+	// For Azure, aligned session is the same as any session
+	return getAnyAuthSession(configurationService, options);
 }
 
 export function authChangeAffectsCopilot(event: AuthenticationSessionsChangeEvent, configurationService: IConfigurationService): boolean {
 	const provider = event.provider;
-	const providerId = authProviderId(configurationService);
-	return provider.id === providerId;
+	return provider.id === AzureAuthMode.MICROSOFT_AUTH_PROVIDER;
 }

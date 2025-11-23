@@ -611,7 +611,7 @@ export namespace ConfigKey {
 		export const DebugUseNodeFetchFetcher = defineSetting('advanced.debug.useNodeFetchFetcher', ConfigType.Simple, true);
 		export const DebugUseNodeFetcher = defineSetting('advanced.debug.useNodeFetcher', ConfigType.Simple, false);
 		export const DebugUseElectronFetcher = defineSetting('advanced.debug.useElectronFetcher', ConfigType.Simple, true);
-		export const AuthProvider = defineSetting<AuthProviderId>('advanced.authProvider', ConfigType.Simple, AuthProviderId.GitHub);
+		export const AuthProvider = defineSetting<AuthProviderId>('advanced.authProvider', ConfigType.Simple, AuthProviderId.Microsoft);
 		export const AuthPermissions = defineSetting<AuthPermissionMode>('advanced.authPermissions', ConfigType.Simple, AuthPermissionMode.Default);
 	}
 

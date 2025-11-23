@@ -16,7 +16,7 @@ import { getEndpointUrl } from '../networkConfiguration';
 import { Response, isAbortError, postRequest } from '../networking';
 import { ICompletionsStatusReporter } from '../progress';
 import { Prompt } from '../prompt/prompt';
-import { MaybeRepoInfo, tryGetGitHubNWO } from '../prompt/repository';
+import { MaybeRepoInfo } from '../prompt/repository';
 import {
 	TelemetryData,
 	TelemetryWithExp,
@@ -521,10 +521,7 @@ export class LiveOpenAIFetcher extends OpenAIFetcher {
 			request.logprobs = 2; // Request that logprobs of 2 tokens (i.e. including the best alternative) be returned
 		}
 
-		const githubNWO = tryGetGitHubNWO(params.repoInfo);
-		if (githubNWO !== undefined) {
-			request.nwo = githubNWO;
-		}
+
 
 		if (params.postOptions) {
 			Object.assign(request, params.postOptions);
@@ -585,12 +582,7 @@ export class LiveOpenAIFetcher extends OpenAIFetcher {
 			logger.info(this.logTargetService, text);
 			return { type: 'failed', reason: `client not supported: ${text}` };
 		}
-		if (isClientError(response) && !response.headers.get('x-github-request-id')) {
-			const message = `Last response was a ${response.status} error and does not appear to originate from GitHub. Is a proxy or firewall intercepting this request? https://gh.io/copilot-firewall`;
-			logger.error(this.logTargetService, message);
-			statusReporter.setWarning(message);
-			telemetryData.properties.error = `Response status was ${response.status} with no x-github-request-id header`;
-		} else if (isClientError(response)) {
+		if (isClientError(response)) {
 			logger.warn(this.logTargetService, `Response status was ${response.status}:`, text);
 			statusReporter.setWarning(`Last response was a ${response.status} error: ${text}`);
 			telemetryData.properties.error = `Response status was ${response.status}: ${text}`;

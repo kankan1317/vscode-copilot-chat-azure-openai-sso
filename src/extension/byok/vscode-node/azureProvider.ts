@@ -72,32 +72,25 @@ export class AzureBYOKModelProvider extends CustomOAIBYOKModelProvider {
 	}
 
 	protected override async getModelsWithCredentials(silent: boolean): Promise<BYOKKnownModels> {
-		// Check user's authentication preference from settings github.copilot.chat.azureAuthType (default: AzureAuthMode.EntraId)
-		const authType = this._configurationService.getConfig(ConfigKey.AzureAuthType);
-
-		if (authType === AzureAuthMode.EntraId) {
-			// Pre-authenticate during model enumeration (not when sending message)
-			// This mirrors API key behavior where user is prompted during enumeration
-			if (!silent) {
-				try {
-					await vscode.authentication.getSession(
-						AzureAuthMode.MICROSOFT_AUTH_PROVIDER,
-						[AzureAuthMode.COGNITIVE_SERVICES_SCOPE],
-						{ createIfNone: true }
-					);
-				} catch (error) {
-					// If sign-in fails, don't show models in picker
-					this._logService.error('[AzureBYOKModelProvider] Authentication failed during Entra ID sign-in:', error);
-					return {};
-				}
+		// Always use Entra ID authentication
+		// Pre-authenticate during model enumeration (not when sending message)
+		// This mirrors API key behavior where user is prompted during enumeration
+		if (!silent) {
+			try {
+				await vscode.authentication.getSession(
+					AzureAuthMode.MICROSOFT_AUTH_PROVIDER,
+					[AzureAuthMode.COGNITIVE_SERVICES_SCOPE],
+					{ createIfNone: true }
+				);
+			} catch (error) {
+				// If sign-in fails, don't show models in picker
+				this._logService.error('[AzureBYOKModelProvider] Authentication failed during Entra ID sign-in:', error);
+				return {};
 			}
-
-			// Return all configured models (no API key check needed for Entra ID)
-			return this.getAllModels();
-		} else {
-			// API KEY MODE: Use traditional API key authentication
-			return super.getModelsWithCredentials(silent);
 		}
+
+		// Return all configured models (no API key check needed for Entra ID)
+		return this.getAllModels();
 	}
 
 	override async provideLanguageModelChatResponse(
@@ -107,49 +100,42 @@ export class AzureBYOKModelProvider extends CustomOAIBYOKModelProvider {
 		progress: Progress<LanguageModelResponsePart2>,
 		token: CancellationToken
 	): Promise<void> {
-		const authType = this._configurationService.getConfig(ConfigKey.AzureAuthType);
+		// Session is guaranteed to be defined when createIfNone: true
+		const session: vscode.AuthenticationSession = await vscode.authentication.getSession(
+			AzureAuthMode.MICROSOFT_AUTH_PROVIDER,
+			[AzureAuthMode.COGNITIVE_SERVICES_SCOPE],
+			{
+				createIfNone: true,
+				silent: false
+			}
+		);
 
-		if (authType === AzureAuthMode.EntraId) {
-			// Session is guaranteed to be defined when createIfNone: true
-			const session: vscode.AuthenticationSession = await vscode.authentication.getSession(
-				AzureAuthMode.MICROSOFT_AUTH_PROVIDER,
-				[AzureAuthMode.COGNITIVE_SERVICES_SCOPE],
-				{
-					createIfNone: true,
-					silent: false
-				}
-			);
+		const modelInfo = await this.getModelInfo(model.id, undefined, {
+			maxInputTokens: model.maxInputTokens,
+			maxOutputTokens: model.maxOutputTokens,
+			toolCalling: !!model.capabilities?.toolCalling,
+			vision: !!model.capabilities?.imageInput,
+			name: model.name,
+			url: model.url,
+			thinking: model.thinking,
+			editTools: model.capabilities?.editTools?.filter(isEndpointEditToolName),
+			requestHeaders: model.requestHeaders,
+		});
 
-			const modelInfo = await this.getModelInfo(model.id, undefined, {
-				maxInputTokens: model.maxInputTokens,
-				maxOutputTokens: model.maxOutputTokens,
-				toolCalling: !!model.capabilities?.toolCalling,
-				vision: !!model.capabilities?.imageInput,
-				name: model.name,
-				url: model.url,
-				thinking: model.thinking,
-				editTools: model.capabilities?.editTools?.filter(isEndpointEditToolName),
-				requestHeaders: model.requestHeaders,
-			});
+		const openAIChatEndpoint = this._instantiationService.createInstance(
+			AzureOpenAIEndpoint,
+			modelInfo,
+			session.accessToken,  // Pass Entra ID token
+			model.url
+		);
 
-			const openAIChatEndpoint = this._instantiationService.createInstance(
-				AzureOpenAIEndpoint,
-				modelInfo,
-				session.accessToken,  // Pass Entra ID token
-				model.url
-			);
-
-			return this._lmWrapper.provideLanguageModelResponse(
-				openAIChatEndpoint,
-				messages,
-				options,
-				options.requestInitiator,
-				progress,
-				token
-			);
-		} else {
-			// API KEY AUTHENTICATION FLOW using parent logic
-			return super.provideLanguageModelChatResponse(model, messages, options, progress, token);
-		}
+		return this._lmWrapper.provideLanguageModelResponse(
+			openAIChatEndpoint,
+			messages,
+			options,
+			options.requestInitiator,
+			progress,
+			token
+		);
 	}
 }
